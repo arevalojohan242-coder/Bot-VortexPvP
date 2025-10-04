@@ -35,6 +35,8 @@ const verifyRoleName = 'User';
 const staffRoleName = 'Staff';
 const adminRoleName = 'Admin';
 const supportChannelName = '🔖║supported';
+const staffSettingsRoleName = 'Staff Settings'; // <— nuevo rol que puede usar comandos
+const pollsChannelName = '📊║weekly-polls'; // <— canal de polls
 
 const ticketCategories = {
   general: '🛠️ ║Supported General',
@@ -53,12 +55,17 @@ client.once('ready', () => {
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
   if (!message.content.startsWith(prefix)) return;
+
+  // chequeo de rol Staff Settings
+  const staffSettingsRole = message.guild.roles.cache.find(r => r.name === staffSettingsRoleName);
+  if (!staffSettingsRole) return message.reply('⚠️ No existe el rol Staff Settings.');
+  if (!message.member.roles.cache.has(staffSettingsRole.id)) return; // no tiene rol => no ejecuta comandos
+
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   // enviar botón verificación
   if (command === 'sendverify') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
     const channel = message.guild.channels.cache.find(c => c.name === verifyChannelName);
     if (!channel) return message.reply('No existe canal de verificación');
 
@@ -79,7 +86,6 @@ client.on('messageCreate', async message => {
 
   // enviar menú de tickets
   if (command === 'sendticket') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) return;
     const channel = message.guild.channels.cache.find(c => c.name === supportChannelName);
     if (!channel) return message.reply('No existe canal de soporte');
 
@@ -110,9 +116,8 @@ client.on('messageCreate', async message => {
     message.reply('✅ Menú de tickets enviado.');
   }
 
-  // comando poll
+  // comando poll (manda embed directo a canal 📊║weekly-polls)
   if (command === 'poll') {
-    if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) return;
     const question = args.join(' ');
     if (!question) return message.reply('Pon la pregunta: `!poll Tu pregunta`');
 
@@ -121,9 +126,21 @@ client.on('messageCreate', async message => {
       .setDescription(question)
       .setColor('Purple');
 
-    const pollMsg = await message.channel.send({ embeds: [embed] });
+    const pollsChannel = message.guild.channels.cache.find(c => c.name === pollsChannelName);
+    if (!pollsChannel) return message.reply('No existe canal de polls.');
+
+    const pollMsg = await pollsChannel.send({ embeds: [embed] });
     await pollMsg.react('✅');
     await pollMsg.react('❌');
+    message.reply('📊 Encuesta enviada al canal de polls.');
+  }
+
+  // comando say (bot escribe como si fuera él)
+  if (command === 'say') {
+    const text = args.join(' ');
+    if (!text) return message.reply('Escribe algo: `!say tu texto`');
+    await message.delete().catch(() => {}); // borra tu mensaje
+    message.channel.send(text); // bot lo dice
   }
 });
 
