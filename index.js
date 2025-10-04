@@ -1,15 +1,22 @@
 require('dotenv').config();
-const {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  PermissionsBitField,
-  EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  ButtonBuilder,
-  ButtonStyle
+const { 
+  Client, 
+  GatewayIntentBits, 
+  Partials, 
+  PermissionsBitField, 
+  EmbedBuilder, 
+  ActionRowBuilder, 
+  StringSelectMenuBuilder, 
+  ButtonBuilder, 
+  ButtonStyle 
 } = require('discord.js');
+const express = require('express'); // para Render
+
+// Servidor HTTP para Render
+const app = express();
+app.get('/', (req, res) => res.send('Bot funcionando'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor HTTP en puerto ${PORT}`));
 
 const client = new Client({
   intents: [
@@ -82,7 +89,6 @@ client.on('messageCreate', async message => {
         `We are here to assist you with any issue.\n\n` +
         `Open a ticket to get in touch with our staff team.\n` +
         `If your request is not answered immediately, please remain patient.\n` +
-        `You can also submit a ticket directly on our website.\n\n` +
         `Click one of the options below to choose the type of ticket you wish to create.`
       )
       .setColor('Blue');
